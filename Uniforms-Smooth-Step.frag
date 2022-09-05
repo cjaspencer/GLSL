@@ -21,6 +21,8 @@ void main() {
 
     // Smooth interpolation between 0.1 and 0.9
     float y = smoothstep(0.1,0.9,st.x);
+    // Replace line 23 for the code on line 25 for a "vertical cut" to understand smooth step. 
+    // float y = smoothstep(0.2,0.5,st.x) - smoothstep(0.5,0.8,st.x);
 
     vec3 color = vec3(y);
 
