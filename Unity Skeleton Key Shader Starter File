@@ -1,0 +1,98 @@
+// Hand typed based on the lecture by Freya Holmer found at the link below. 
+// https://www.youtube.com/watch?v=kfM-yu0iQBk&list=PLImQaTpSAdsCnJon-Eir92SZMl7tPBS4Z
+
+// Default Shader
+Shader "Unlit/ShaderLearning" {
+    // Shader Properties - input data (excluding mesh and lighting whatever Unity Supplies)
+    Properties{
+        _MainTex( // input data
+            //"Texture", 2D) = "white" {}
+            _Value("Value", float) = 1.0; // or some other defaul value
+    }
+    // Subshader (can have multiple, a single sub is considered just a "shader"
+    SubShader {
+        // Has all sorts (sorting, que, etc..)
+        Tags { "RenderType"="Opaque" }
+        // Picks different sub shaders based on what LOD is set to. Not used in learning, but seems like "steps"
+        LOD 100
+
+        // Pass contains the shader code
+        Pass {
+            // Stensil properties... graphics related for this specific pass
+            // Anything in CGPROGRAM and ENDCG is your Shader Code
+            CGPROGRAM
+            // Points to the name of the functions and tells which is what
+            // This one is the vertex called vert
+            #pragma vertex vert
+            // This one is obviously, fragment. See them below.
+            #pragma fragment frag
+            // make fog work
+            // ignoring for training.
+            #pragma multi_compile_fog
+
+            // Takes code from a different files and pastes it into the shader.
+            // The UnityCG.cginc file is useful to include. You can include other files like libraries.
+            #include "UnityCG.cginc"
+
+
+
+            sampler2D _MainTex;
+            float4 _MainTex_ST;
+
+            struct MeshData { // per-vertex mesh dat
+                float4 vertex : POSITION; // vertex position
+                float3 normals : NORMAL; // 3 dimensional vector x, y, z
+                float4 tangent : TANGENT; // x, y, z, w, or "sign" + or -
+                float4 color : COLOR;
+                float2 uv0 : TEXCOORD0;// uv coordinates maybe for diffuse/normal map textures - Can also be float4.
+                float2 uv1 : TEXCOORD0;// uv coordinates maybe for lightmap textures or other baked data (for no overlaps)
+            };
+
+            struct appdata {
+                float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+            };
+             
+            // Unity's "V2F" is the name for data that gets passed from the vertex shader to the fragment shader.
+            struct Interpolators {
+                float2 uv0 : TEXCOORD0;
+                // UNITY_FOG_COORDS(1) This is fog and ignored.
+                float4 vertex : SV_POSITION; // Clip space position of this vertex
+                float 2 uv : TEXCOORD0; // These don't have to be UV's, you can pump anything in here. Just match the data type
+                float 3 uv : TEXCOORD1; // 0
+                float 2 uv : TEXCOORD2; //
+                float 4 uv : TEXCOORD3; //
+                float 2 uv : TEXCOORD4; // Use as many an needed
+            };
+
+            Interpolators vert (appdata v) {
+                Interpolator o;
+                // Multiples by the MVP matrix. Local space to clip space... or 0 to 1
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                //  o.uv = TRANSFORM_TEX(v.uv, _MainTex); textured ignored as well
+                // UNITY_TRANSFER_FOG(o,o.vertex); ignored because fog related
+                return o; // o just stands for 'output.' boring.
+            }
+
+            // float (32 bit float) anything in "world space" 
+            // half (16 bit float) good for most things is done in the proper space. Normal, clip, view
+            // fixed ((legacy... low precision, around 12 or something weird. Ignore)
+            // float4 -> half4 -> fixed4
+            // float -> half4x4 (C#: Matrix 4x4)
+            // bool 0 1
+            // int
+            // int2 might be possible, like x, y, z etc.
+
+            // tells it to output to the frame buffer
+            // This is always here.
+            fixed4 frag (Interpolators i) : SV_Target {
+                // sample the texture - no, just ignore it
+                fixed4 col = tex2D(_MainTex, i.uv);
+                // apply fog ignore.
+                // UNITY_APPLY_FOG(i.fogCoord, col);
+                return col;
+            }
+            ENDCG
+        }
+    }
+}
